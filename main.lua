@@ -1,31 +1,31 @@
-local running = true
-local CHECK_INTERVAL = 10
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
 
-local function findSprouts()
-    local found = {}
+local player = Players.LocalPlayer
+local PLACE_ID = game.PlaceId
 
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if string.find(
-            string.lower(obj.Name),
-            "sprout",
-            1,
-            true
-        ) then
-            table.insert(found, obj)
-        end
+local HOP_INTERVAL = 15
+local hopping = false
+
+local function serverHop()
+    if hopping then
+        return
     end
 
-    return found
+    hopping = true
+    print("Ищем другой сервер...")
+
+    local success, err = pcall(function()
+        TeleportService:Teleport(PLACE_ID, player)
+    end)
+
+    if not success then
+        warn("Ошибка перехода:", err)
+        hopping = false
+    end
 end
 
-while running do
-    local success, result = pcall(findSprouts)
-
-    if success then
-        print("Найдено ростков:", #result)
-    else
-        warn("Ошибка поиска:", result)
-    end
-
-    task.wait(CHECK_INTERVAL)
+while true do
+    task.wait(HOP_INTERVAL)
+    serverHop()
 end
