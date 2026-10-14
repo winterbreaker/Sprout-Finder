@@ -1,122 +1,123 @@
--- My Roblox Account Manager
--- Account slots + 12-minute timer
--- LocalScript
-
+```lua
 local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+
 local player = Players.LocalPlayer
 
-local TOTAL_ACCOUNTS = 300
-local INTERVAL = 12 * 60
-
-local currentAccount = 1
-local running = false
-local secondsLeft = INTERVAL
-
 local gui = Instance.new("ScreenGui")
-gui.Name = "MyAccountManager"
+gui.Name = "VIPServerManager"
 gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.fromOffset(320, 270)
-frame.Position = UDim2.new(0, 25, 0.5, -135)
-frame.BackgroundColor3 = Color3.fromRGB(30, 32, 42)
-frame.BorderSizePixel = 0
+frame.Size = UDim2.fromOffset(320, 200)
+frame.Position = UDim2.new(0.5, -160, 0.25, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
 frame.Parent = gui
 
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 42)
-title.BackgroundColor3 = Color3.fromRGB(48, 52, 68)
-title.Text = "MY ACCOUNT MANAGER"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.TextScaled = true
+title.Size = UDim2.new(1, 0, 0, 35)
+title.BackgroundTransparency = 1
+title.Text = "VIP Server Manager"
+title.TextColor3 = Color3.fromRGB(255, 200, 70)
+title.TextSize = 18
+title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
-local function makeLabel(y, height)
-    local label = Instance.new("TextLabel")
-    label.Position = UDim2.fromOffset(10, y)
-    label.Size = UDim2.new(1, -20, 0, height)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.new(1, 1, 1)
-    label.TextScaled = true
-    label.Parent = frame
-    return label
-end
+local joinButton = Instance.new("TextButton")
+joinButton.Size = UDim2.new(1, -24, 0, 35)
+joinButton.Position = UDim2.fromOffset(12, 40)
+joinButton.Text = "JOIN VIP"
+joinButton.TextColor3 = Color3.new(1, 1, 1)
+joinButton.TextSize = 14
+joinButton.Font = Enum.Font.GothamBold
+joinButton.BackgroundColor3 = Color3.fromRGB(50, 160, 90)
+joinButton.Parent = frame
 
-local accountLabel = makeLabel(50, 30)
-local timerLabel = makeLabel(82, 25)
-local statusLabel = makeLabel(108, 25)
+Instance.new("UICorner", joinButton).CornerRadius = UDim.new(0, 6)
 
-local function updateUI()
-    accountLabel.Text = string.format(
-        "Account slot: %d / %d",
-        currentAccount,
-        TOTAL_ACCOUNTS
-    )
+local linkBox = Instance.new("TextBox")
+linkBox.Size = UDim2.new(1, -24, 0, 35)
+linkBox.Position = UDim2.fromOffset(12, 83)
+linkBox.PlaceholderText = "Вставь ссылку VIP-сервера сюда"
+linkBox.Text = ""
+linkBox.ClearTextOnFocus = false
+linkBox.TextSize = 12
+linkBox.TextColor3 = Color3.new(1, 1, 1)
+linkBox.PlaceholderColor3 = Color3.fromRGB(180, 180, 190)
+linkBox.BackgroundColor3 = Color3.fromRGB(48, 48, 58)
+linkBox.Parent = frame
 
-    timerLabel.Text = string.format(
-        "Next slot in: %02d:%02d",
-        math.floor(secondsLeft / 60),
-        secondsLeft % 60
-    )
+Instance.new("UICorner", linkBox).CornerRadius = UDim.new(0, 6)
 
-    statusLabel.Text = running and "Status: Running" or "Status: Stopped"
-end
+local saveButton = Instance.new("TextButton")
+saveButton.Size = UDim2.new(1, -24, 0, 30)
+saveButton.Position = UDim2.fromOffset(12, 125)
+saveButton.Text = "SAVE LINK"
+saveButton.TextColor3 = Color3.new(1, 1, 1)
+saveButton.TextSize = 13
+saveButton.Font = Enum.Font.GothamBold
+saveButton.BackgroundColor3 = Color3.fromRGB(65, 95, 170)
+saveButton.Parent = frame
 
-local function makeButton(text, x, y, callback)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.fromOffset(140, 38)
-    button.Position = UDim2.fromOffset(x, y)
-    button.BackgroundColor3 = Color3.fromRGB(65, 90, 140)
-    button.TextColor3 = Color3.new(1, 1, 1)
-    button.TextScaled = true
-    button.Text = text
-    button.Parent = frame
-    button.Activated:Connect(callback)
-    return button
-end
+Instance.new("UICorner", saveButton).CornerRadius = UDim.new(0, 6)
 
-makeButton("Previous", 10, 145, function()
-    currentAccount = math.max(1, currentAccount - 1)
-    secondsLeft = INTERVAL
-    updateUI()
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, -24, 0, 25)
+status.Position = UDim2.fromOffset(12, 163)
+status.BackgroundTransparency = 1
+status.Text = "Вставь ссылку и нажми SAVE LINK"
+status.TextColor3 = Color3.fromRGB(220, 220, 220)
+status.TextSize = 11
+status.Parent = frame
+
+local savedLink = ""
+
+saveButton.MouseButton1Click:Connect(function()
+    savedLink = linkBox.Text:match("^%s*(.-)%s*$")
+
+    if savedLink == "" then
+        status.Text = "Сначала вставь ссылку!"
+        return
+    end
+
+    if not savedLink:find("roblox.com", 1, true) then
+        savedLink = ""
+        status.Text = "Это не похоже на ссылку Roblox"
+        return
+    end
+
+    status.Text = "Ссылка сохранена!"
 end)
 
-makeButton("Next", 170, 145, function()
-    currentAccount = math.min(TOTAL_ACCOUNTS, currentAccount + 1)
-    secondsLeft = INTERVAL
-    updateUI()
-end)
+joinButton.MouseButton1Click:Connect(function()
+    if savedLink == "" then
+        status.Text = "Сначала сохрани ссылку!"
+        return
+    end
 
-makeButton("Start", 10, 190, function()
-    running = true
-    updateUI()
-end)
+    local code = savedLink:match("[?&]privateServerLinkCode=([^&]+)")
 
-makeButton("Stop", 170, 190, function()
-    running = false
-    updateUI()
-end)
+    if not code then
+        status.Text = "Не найдена ссылка-код VIP-сервера"
+        return
+    end
 
-gui.Parent = player:WaitForChild("PlayerGui")
-updateUI()
+    status.Text = "Пробую подключиться..."
 
-task.spawn(function()
-    while gui.Parent do
-        task.wait(1)
+    local ok, err = pcall(function()
+        TeleportService:TeleportToPrivateServer(
+            game.PlaceId,
+            code,
+            {player}
+        )
+    end)
 
-        if running then
-            secondsLeft -= 1
-
-            if secondsLeft <= 0 then
-                secondsLeft = INTERVAL
-                currentAccount += 1
-
-                if currentAccount > TOTAL_ACCOUNTS then
-                    currentAccount = 1
-                end
-            end
-
-            updateUI()
-        end
+    if not ok then
+        status.Text = "Переход не удался"
+        warn(err)
     end
 end)
+```
